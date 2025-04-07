@@ -1,0 +1,505 @@
+<html>
+<head>
+
+<style>
+
+
+* {
+box-sizing: border-box;
+}
+
+body {
+width: 800px;
+border: 1px solid #e0e0e0;
+margin: 0 auto;
+display: flex;
+flex-grow: 1;
+}
+
+.left-block {
+width: 160px;
+border-right: 1px solid #e0e0e0;
+}
+
+.buttons {
+height: 80px;
+padding-top: 10px;
+}
+
+.buttons button {
+display: block;
+width: 100%;
+border: 0;
+border-radius: 0;
+background-color: #ece8e8;
+margin-bottom: 5px;
+padding: 5px;
+height: 30px;
+outline: none;
+position: relative;
+cursor: pointer;
+font-size: 16px;
+}
+
+.right-block {
+width: 640px;
+}
+
+#paint-canvas {
+cursor:crosshair;
+background: #406080;
+}
+
+
+
+</style>
+
+
+
+
+<script>
+
+
+let canvas;
+let context;
+let image;
+let intId = 0;
+let intId2 = 0;
+let intId3 = 0;
+let intId4 = 0;
+let ax, ay;
+let aa = 0;
+
+
+class Point{
+
+constructor() {
+this.size = 1; //Math.random() * 5;
+this.x = 300 + Math.random() * 200;
+this.y = 200 + Math.random() * 200;
+}
+
+step() {
+this.size *= 1.01;
+this.x = 400 + (this.x - 400) * 1.01;
+this.y = 300 + (this.y - 300) * 1.01;
+
+if (this.x < -100 || this.x > 900 || this.y < -100 || this.y > 700) return false;
+return true;
+}
+};
+
+
+let points = new Map();
+
+let x1, y1, x2, y2;
+let scale = 1.0;
+
+let effect = 1;
+
+
+function draw(x, y, w, h) {
+let rw = w * scale;
+let rh = h * scale;
+
+context.drawImage(image, x - rw / 2, y - rh / 2, rw, rh);
+scale *= 1.01;
+}
+
+function draw2(x, y, w, h) {
+context.drawImage(image, x - w / 2, y - h / 2, w, h);
+}
+
+
+
+
+window.onload = function () {
+
+// Definitions
+canvas = document.getElementById("paint-canvas");
+context = canvas.getContext("2d");
+
+var boundings = canvas.getBoundingClientRect();
+
+// Specifications
+var mouseX = 0;
+var mouseY = 0;
+context.strokeStyle = 'black'; // initial brush color
+context.lineWidth = 1; // initial brush width
+var isDrawing = false;
+image = document.getElementById('source');
+
+var brushes = document.getElementsByClassName('brushes')[0];
+
+brushes.addEventListener('click', function(event) {
+image = event.target;
+});
+
+
+
+// Mouse Down Event
+canvas.addEventListener('mousedown', function(event) {
+setMouseCoordinates(event);
+isDrawing = true;
+
+x1 = mouseX;
+y1 = mouseY;
+scale = 1.0;
+
+// Start Drawing
+draw(mouseX, mouseY, image.width, image.height);
+});
+
+// Mouse Move Event
+canvas.addEventListener('mousemove', function(event) {
+setMouseCoordinates(event);
+x2 = mouseX;
+y2 = mouseY;
+
+
+if(isDrawing){
+
+let d = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+
+if (d < 5) {
+draw(mouseX, mouseY, image.width, image.height);
+}
+else {
+for (let d2 = 0; d2 < d; d2 += 5) {
+let x = x1 + (x2 - x1) * d2 / d;
+let y = y1 + (y2 - y1) * d2 / d;
+
+draw(x, y, image.width, image.height);
+}
+}
+
+x1 = x2;
+y1 = y2;
+}
+});
+
+// Mouse Up Event
+canvas.addEventListener('mouseup', function(event) {
+setMouseCoordinates(event);
+isDrawing = false;
+});
+
+// Mouse Double Click Event
+canvas.addEventListener('dblclick', function(event) {
+setMouseCoordinates(event);
+
+if (effect == 1) {
+let r = 5;
+
+for (let a = 0; a < 100; a += 0.1) {
+r *= 1.01;
+let x = mouseX + r * Math.sin(a);
+let y = mouseY + r * Math.cos(a);
+draw2(x, y, r / 5, r / 5);
+}
+}
+
+if (effect == 2) {
+
+for (let a = 0; a < Math.PI * 2 + 0.01; a += Math.PI / 4) {
+
+for (let r = 1.0; r < 628; r *= 1.05) {
+let x = mouseX + r * Math.sin(a);
+let y = mouseY + r * Math.cos(a);
+
+let rr = 5 + (Math.sin(r / 20) + 1) * 20;
+
+draw2(x, y, rr, rr);
+}
+}
+}
+
+
+if (effect == 3) {
+for(let step = 10; step < 1000; step += 20) {
+
+for (let x = mouseX - step; x <= mouseX + step; x += 7) {
+let y1 = mouseY - step;
+let y2 = mouseY + step;
+draw2(x, y1, 1 + step / 30, 1 + step / 30);
+draw2(x, y2, 1 + step / 30, 1 + step / 30);
+}
+
+for (let y = mouseY - step; y <= mouseY + step; y += 7) {
+let x1 = mouseX - step;
+let x2 = mouseX + step;
+draw2(x1, y, 1 + step / 30, 1 + step / 30);
+draw2(x2, y, 1 +
+step / 30, 1 + step / 30);
+}
+}
+}
+
+});
+
+
+// Handle Mouse Coordinates
+function setMouseCoordinates(event) {
+mouseX = event.clientX - boundings.left + document.body.scrollLeft;
+mouseY = event.clientY - boundings.top + document.body.scrollTop;
+}
+
+// Handle Clear Button
+var clearButton = document.getElementById('clear');
+
+clearButton.addEventListener('click', function() {
+context.clearRect(0, 0, canvas.width, canvas.height);
+});
+
+// Handle Save Button
+var saveButton = document.getElementById('save');
+
+saveButton.addEventListener('click', function() {
+var imageName = prompt('Please enter image name');
+var canvasDataURL = canvas.toDataURL();
+var a = document.createElement('a');
+a.href = canvasDataURL;
+a.download = imageName || 'drawing';
+a.click();
+});
+
+// Handle Save Button
+var goButton = document.getElementById('go');
+
+goButton.addEventListener('click', function() {
+
+ax = 300; ay = 200;
+
+if (intId == 0) {
+
+intId = window.setInterval(
+
+function() {
+
+let r = 15;
+ax += 2;
+aa -= 0.2;
+context.clearRect(0, 0, canvas.width, canvas.height);
+
+for (let a = 10; a < 100; a += 0.1) {
+r *= 1.01;
+let x = ax + r * Math.sin(a + aa);
+let y = ay + r * Math.cos(a + aa);
+draw2(x, y, r / 5, r / 5);
+}
+
+if (ax > 600) {
+window.clearInterval(intId);
+intId = 0;
+}
+}, 30);
+}
+
+
+});
+
+
+
+
+// Handle Save Button
+var go2Button = document.getElementById('go2');
+
+go2Button.addEventListener('click', function() {
+
+ax = 0;
+
+
+if (intId2 == 0) {
+
+aa = 1;
+
+intId2 = window.setInterval(
+
+function() {
+
+context.clearRect(0, 0, canvas.width, canvas.height);
+
+ax += 1;
+
+points.set(aa++, new Point());
+//console.log(aa);
+
+for (var [key, value] of points) {
+draw2(value.x - value.size / 2, value.y - value.size / 2, value.size, value.size);
+}
+
+for (var [key, value] of points) {
+if (! value.step()) {
+points.delete(key);
+}
+}
+
+if (ax > 600) {
+window.clearInterval(intId2);
+intId2 = 0;
+points.clear();
+}
+}, 30);
+}
+
+
+
+});
+
+
+
+// Handle Save Button
+var go3Button = document.getElementById('go3');
+
+go3Button.addEventListener('click', function() {
+
+
+if (intId3 == 0) {
+
+ax = 0;
+
+intId3 = window.setInterval(
+
+function() {
+
+context.clearRect(0, 0, canvas.width, canvas.height);
+
+ax++;
+
+for(let x = -20; x < 20; x += 0.5) {
+for (let y = -20; y < 20; y += 0.5) {
+
+let r = Math.sqrt(x * x + y * y) + 1;
+let z = Math.sin(r - ax) * 2 / r;
+
+let px = 400 - x * 10 + y * 10;
+let py = 300 + x * 5 + y * 5 - z * 50;
+draw2(px, py, 15, 15);
+
+
+}
+}
+
+
+if (ax > 60) {
+window.clearInterval(intId3);
+intId3 = 0;
+}
+}, 30);
+}
+
+
+
+});
+
+// Handle Save Button
+var go4 = document.getElementById('go4');
+
+
+
+let s = 10;
+go4.addEventListener('click', function() {
+
+ax = 300; ay = 300;
+
+if (intId == 0) {
+
+intId = window.setInterval(
+
+function() {
+
+
+let r = 15;
+
+aa -= 0.2;
+context.clearRect(0, 0, canvas.width, canvas.height);
+
+points.set(aa++, new Point());
+
+for(let step = s; step < 1000; step += 20) {
+
+for (let x = ax - step; x <= ax + step; x += 7) {
+let y1 = ay - step;
+let y2 = ay + step;
+
+draw2(x, y1, 1 + step / 60, 1 + step / 60);
+draw2(x, y2, 1 + step / 60, 1 + step / 60);
+}
+
+for (let y = ay - step; y <= ay + step; y += 7) {
+let x1 = ax - step;
+let x2 = ax + step;
+draw2(x1, y, 1 + step / 60, 1 + step / 60);
+draw2(x2, y, 1 + step / 60, 1 + step / 60);
+}
+
+
+
+}
+s += 1;
+if(s == 31) s = 10;
+if (ax > 800) {
+window.clearInterval(intId);
+intId = 0;
+}
+}, 30);
+}
+});
+
+
+
+};
+
+
+
+
+
+
+</script>
+
+
+
+
+
+</head>
+
+
+<body>
+<div class="left-block">
+<div class="brushes">
+<img src="1.png">
+<img src="2.png">
+<img src="3.png">
+<img src="4.png">
+
+</div>
+<div class="effects">
+<select onchange="effect = this.options[this.selectedIndex].value">
+<option value = 1
+selected="selected">Спираль</option>
+<option value = 2 >Взрыв</option>
+<option value = 3 >Квадраты</option>
+</select>
+</div>
+
+<div class="buttons">
+<button id="clear" type="button">Clear</button>
+<button id="save" type="button">Save</button>
+<button id="go" type="button">Animation </button>
+<button id="go2" type="button">Animation 2</button>
+<button id="go3" type="button">Animation 3</button>
+<button id="go4" type="button">Animation 4</button>
+</div>
+</div>
+<div class="right-block">
+<canvas id="paint-canvas" width="600" height="600"></canvas>
+</div>
+
+<div style="display:none;">
+<img id="source" src="2.png">
+</div>
+
+</body>
+
+
+</html>
